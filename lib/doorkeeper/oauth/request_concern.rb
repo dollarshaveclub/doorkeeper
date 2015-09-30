@@ -29,12 +29,20 @@ module Doorkeeper
         error.nil?
       end
 
+      def access_token_expiration(server, client)
+        if client && client.custom_expiration_time
+          client.custom_expiration_time
+        else
+          server.access_token_expires_in
+        end
+      end
+
       def find_or_create_access_token(client, resource_owner_id, scopes, server)
         @access_token = AccessToken.find_or_create_for(
           client,
           resource_owner_id,
           scopes,
-          server.access_token_expires_in,
+          access_token_expiration(server, client),
           server.refresh_token_enabled?)
       end
 
