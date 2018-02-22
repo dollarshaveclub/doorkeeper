@@ -2,12 +2,13 @@ require 'doorkeeper/oauth/client_credentials/validation'
 
 module Doorkeeper
   module OAuth
-    class ClientCredentialsRequest
+    class ClientCredentialsRequest < BaseRequest
       class Issuer
         attr_accessor :token, :validation, :error
 
         def initialize(server, validation)
-          @server, @validation = server, validation
+          @server = server
+          @validation = validation
         end
 
         def create(client, scopes, creator = Creator.new)

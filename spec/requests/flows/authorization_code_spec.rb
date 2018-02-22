@@ -29,6 +29,7 @@ feature 'Authorization Code Flow' do
 
     access_grant_should_exist_for(@client, @resource_owner)
 
+    url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
     i_should_see 'Authorization code:'
     i_should_see Doorkeeper::AccessGrant.first.token
   end
@@ -41,13 +42,11 @@ feature 'Authorization Code Flow' do
   end
 
   scenario 'resource owner requests an access token with authorization code' do
-    skip 'TODO: need to add request helpers to this feature spec'
-
     visit authorization_endpoint_url(client: @client)
     click_on 'Authorize'
 
     authorization_code = Doorkeeper::AccessGrant.first.token
-    post token_endpoint_url(code: authorization_code, client: @client)
+    create_access_token authorization_code, @client
 
     access_token_should_exist_for(@client, @resource_owner)
 
@@ -84,27 +83,23 @@ feature 'Authorization Code Flow' do
     end
 
     scenario 'new access token matches required scopes' do
-      skip 'TODO: need to add request helpers to this feature spec'
-
       visit authorization_endpoint_url(client: @client, scope: 'public write')
       click_on 'Authorize'
 
       authorization_code = Doorkeeper::AccessGrant.first.token
-      post token_endpoint_url(code: authorization_code, client: @client)
+      create_access_token authorization_code, @client
 
       access_token_should_exist_for(@client, @resource_owner)
       access_token_should_have_scopes :public, :write
     end
 
     scenario 'returns new token if scopes have changed' do
-      skip 'TODO: need to add request helpers to this feature spec'
-
       client_is_authorized(@client, @resource_owner, scopes: 'public write')
       visit authorization_endpoint_url(client: @client, scope: 'public')
       click_on 'Authorize'
 
       authorization_code = Doorkeeper::AccessGrant.first.token
-      post token_endpoint_url(code: authorization_code, client: @client)
+      create_access_token authorization_code, @client
 
       expect(Doorkeeper::AccessToken.count).to be(2)
 
@@ -112,14 +107,12 @@ feature 'Authorization Code Flow' do
     end
 
     scenario 'resource owner authorizes the client with extra scopes' do
-      skip 'TODO: need to add request helpers to this feature spec'
-
       client_is_authorized(@client, @resource_owner, scopes: 'public')
       visit authorization_endpoint_url(client: @client, scope: 'public write')
       click_on 'Authorize'
 
       authorization_code = Doorkeeper::AccessGrant.first.token
-      post token_endpoint_url(code: authorization_code, client: @client)
+      create_access_token authorization_code, @client
 
       expect(Doorkeeper::AccessToken.count).to be(2)
 

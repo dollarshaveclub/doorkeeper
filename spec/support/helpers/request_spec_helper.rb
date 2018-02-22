@@ -27,6 +27,14 @@ module RequestSpecHelper
     URI.parse(page.current_url)
   end
 
+  def request_response
+    respond_to?(:response) ? response : page.driver.response
+  end
+
+  def json_response
+    JSON.parse(request_response.body)
+  end
+
   def should_have_header(header, value)
     expect(headers[header]).to eq(value)
   end
@@ -44,15 +52,15 @@ module RequestSpecHelper
   end
 
   def should_have_json(key, value)
-    expect(JSON.parse(response.body).fetch(key)).to eq(value)
+    expect(json_response.fetch(key)).to eq(value)
   end
 
   def should_have_json_within(key, value, range)
-    expect(JSON.parse(response.body).fetch(key)).to be_within(range).of(value)
+    expect(json_response.fetch(key)).to be_within(range).of(value)
   end
 
   def should_not_have_json(key)
-    expect(JSON.parse(response.body)).not_to have_key(key)
+    expect(json_response).not_to have_key(key)
   end
 
   def sign_in
@@ -60,16 +68,20 @@ module RequestSpecHelper
     click_on 'Sign in'
   end
 
+  def create_access_token(authorization_code, client)
+    page.driver.post token_endpoint_url(code: authorization_code, client: client)
+  end
+
   def i_should_see_translated_error_message(key)
     i_should_see translated_error_message(key)
   end
 
   def translated_error_message(key)
-    I18n.translate key, scope: [:doorkeeper, :errors, :messages]
+    I18n.translate key, scope: %i[doorkeeper errors messages]
   end
 
   def response_status_should_be(status)
-    expect(page.driver.response.status.to_i).to eq(status)
+    expect(request_response.status.to_i).to eq(status)
   end
 end
 

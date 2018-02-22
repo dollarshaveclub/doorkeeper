@@ -1,38 +1,34 @@
+require 'active_support/lazy_load_hooks'
+
 module Doorkeeper
   module Orm
     module ActiveRecord
       def self.initialize_models!
-        require 'doorkeeper/orm/active_record/access_grant'
-        require 'doorkeeper/orm/active_record/access_token'
-        require 'doorkeeper/orm/active_record/application'
+        lazy_load do
+          require 'doorkeeper/orm/active_record/base_record'
+          require 'doorkeeper/orm/active_record/access_grant'
+          require 'doorkeeper/orm/active_record/access_token'
+          require 'doorkeeper/orm/active_record/application'
 
-        if Doorkeeper.configuration.active_record_options[:establish_connection]
-          [Doorkeeper::AccessGrant, Doorkeeper::AccessToken, Doorkeeper::Application].each do |c|
-            c.send :establish_connection, Doorkeeper.configuration.active_record_options[:establish_connection]
+          if Doorkeeper.configuration.active_record_options[:establish_connection]
+            [Doorkeeper::AccessGrant, Doorkeeper::AccessToken, Doorkeeper::Application].each do |model|
+              options = Doorkeeper.configuration.active_record_options[:establish_connection]
+              model.establish_connection(options)
+            end
           end
         end
       end
 
       def self.initialize_application_owner!
-        require 'doorkeeper/models/concerns/ownership'
+        lazy_load do
+          require 'doorkeeper/models/concerns/ownership'
 
-        Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
+          Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
+        end
       end
 
-      def self.check_requirements!(_config)
-        if ::ActiveRecord::Base.connected? &&
-           ::ActiveRecord::Base.connection.table_exists?(
-             Doorkeeper::Application.table_name
-           )
-          unless Doorkeeper::Application.new.attributes.include?("scopes")
-            migration_path = '../../../generators/doorkeeper/templates/add_scopes_to_oauth_applications.rb'
-            puts <<-MSG.squish
-[doorkeeper] Missing column: `oauth_applications.scopes`.
-Create the following migration and run `rake db:migrate`.
-            MSG
-            puts File.read(File.expand_path(migration_path, __FILE__))
-          end
-        end
+      def self.lazy_load(&block)
+        ActiveSupport.on_load(:active_record, {}, &block)
       end
     end
   end
