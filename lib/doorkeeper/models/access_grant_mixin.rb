@@ -7,39 +7,19 @@ module Doorkeeper
     include Models::Revocable
     include Models::Accessible
     include Models::Scopes
-    include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
-
-    included do
-      belongs_to_options = {
-        class_name: 'Doorkeeper::Application',
-        inverse_of: :access_grants
-      }
-      if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
-        belongs_to_options.merge!(optional: true)
-      end
-
-      belongs_to :application, belongs_to_options
-
-      if respond_to?(:attr_accessible)
-        attr_accessible :resource_owner_id, :application_id, :expires_in, :redirect_uri, :scopes
-      end
-
-      validates :resource_owner_id, :application_id, :token, :expires_in, :redirect_uri, presence: true
-      validates :token, uniqueness: true
-
-      before_validation :generate_token, on: :create
-    end
 
     module ClassMethods
+      # Searches for Doorkeeper::AccessGrant record with the
+      # specific token value.
+      #
+      # @param token [#to_s] token value (any object that responds to `#to_s`)
+      #
+      # @return [Doorkeeper::AccessGrant, nil] AccessGrant object or nil
+      #   if there is no record with such token
+      #
       def by_token(token)
-        where(token: token.to_s).limit(1).to_a.first
+        find_by(token: token.to_s)
       end
-    end
-
-    private
-
-    def generate_token
-      self.token = UniqueToken.generate
     end
   end
 end

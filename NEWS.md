@@ -2,13 +2,104 @@
 
 User-visible changes worth mentioning.
 
----
+## master
 
-- Toughen parameters filter with exact match
+- [#1040] Clear mixins from ActiveRecord DSL and save only overridable API. It
+  allows to use this mixins in Doorkeeper ORM extensions with minimum code boilerplate.
+
+## 4.3.0
+
+- [#976] Fix to invalidate the second redirect URI when the first URI is the native URI
+- [#1035] Allow `Application#redirect_uri=` to handle array of URIs.
+- [#1036] Allow to forbid Application redirect URI's with specific rules.
+- [#1029] Deprecate `order_method` and introduce `ordered_by`. Sort applications
+  by `created_at` in index action.
+- [#1033] Allow Doorkeeper configuration option #force_ssl_in_redirect_uri to be a callable object.
+- Fix Grape integration & add specs for it
+- [#913] Deferred ORM (ActiveRecord) models loading
+- [#943] Fix Access Token token generation when certain errors occur in custom token generators
+- [#1026] Implement RFC7662 - OAuth 2.0 Token Introspection
+- [#985] Generate valid migration files for Rails >= 5
+- [#972] Replace Struct subclassing with block-form initialization
+- [#1003] Use URL query param to pass through native redirect auth code so automated apps can find it.
+- [#868] `Scopes#&` and `Scopes#+` now take an array or any other enumerable
+  object.
+- [#1019] Remove translation not in use: `invalid_resource_owner`.
+- Use Ruby 2 hash style syntax (min required Ruby version = 2.1)
+- [#948] Make Scopes.<=> work with any "other" value.
+- [#974] Redirect URI is checked without query params within AuthorizationCodeRequest.
+- [#1004] More explicit help text for `native_redirect_uri`.
+- [#1023] Update Ruby versions and test against 2.5.0 on Travis CI.
+- [#1024] Migrate from FactoryGirl to FactoryBot.
+- [#1025] Improve documentation for adding foreign keys
+- [#1028] Make it possible to have composit strategy names.
+
+## 4.2.6
+
+- [#970] Escape certain attributes in authorization forms.
+
+## 4.2.5
+
+- [#936] Deprecate `Doorkeeper#configured?`, `Doorkeeper#database_installed?`, and
+  `Doorkeeper#installed?`
+- [#909] Add `InvalidTokenResponse#reason` reader method to allow read the kind
+  of invalid token error.
+- [#928] Test against more recent Ruby versions
+- Small refactorings within the codebase
+- [#921] Switch to Appraisal, and test against Rails master
+- [#892] Add minimum Ruby version requirement
+
+## 4.2.0
+
+- Security fix: Address CVE-2016-6582, implement token revocation according to
+    spec (tokens might not be revoked if client follows the spec).
+- [#873] Add hooks to Doorkeeper::ApplicationMetalController
+- [#871] Allow downstream users to better utilize doorkeeper spec factories by
+  eliminating name conflict on `:user` factory.
+
+## 4.1.0
+
+- [#845] Allow customising the `Doorkeeper::ApplicationController` base
+  controller
+
+## 4.0.0
+
+- [#834] Fix AssetNotPrecompiled error with Sprockets 4
+- [#843] Revert "Fix validation error messages"
+- [#847] Specify Null option to timestamps
+
+## 4.0.0.rc4
+
+- [#777] Add support for public client in password grant flow
+- [#823] Make configuration and specs ORM independent
+- [#745] Add created_at timestamp to token generation options
+- [#838] Drop `Application#scopes` generator and warning, introduced for
+  upgrading doorkeeper from v2 to v3.
+- [#801] Fix Rails 5 warning messages
+- Test against Rails 5 RC1
+
+## 4.0.0.rc3
+
+- [#769] Revoke refresh token on access token use. To make use of the new config
+  add `previous_refresh_token` column to `oauth_access_tokens`:
+
+  ```
+  rails generate doorkeeper:previous_refresh_token
+  ```
+- [#811] Toughen parameters filter with exact match
+- [#813] Applications admin bugfix
+- [#799] Fix Ruby Warnings
+- Drop `attr_accessible` from models
+
+### Backward incompatible changes
+
+- [#730] Force all timezones to use UTC to prevent comparison issues.
+- [#802] Remove `config.i18n.fallbacks` from engine
 
 ## 4.0.0.rc2
 
 - Fix optional belongs_to for Rails 5
+- Fix Ruby warnings
 
 ## 4.0.0.rc1
 
@@ -89,7 +180,7 @@ User-visible changes worth mentioning.
 - Remove `applications.scopes` upgrade notice.
 
 
-## 2.2.2 (unreleased)
+## 2.2.2
 
 - [#541] Fixed `undefined method attr_accessible` problem on Rails 4
     (happens only when ProtectedAttributes gem is used) in #599

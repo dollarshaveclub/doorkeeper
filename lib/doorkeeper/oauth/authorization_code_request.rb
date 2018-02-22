@@ -1,13 +1,11 @@
 module Doorkeeper
   module OAuth
-    class AuthorizationCodeRequest
-      include Validations
-      include OAuth::RequestConcern
-
+    class AuthorizationCodeRequest < BaseRequest
       validate :attributes,   error: :invalid_request
       validate :client,       error: :invalid_client
       validate :grant,        error: :invalid_grant
-      validate :redirect_uri, error: :invalid_redirect_uri
+      # @see https://tools.ietf.org/html/rfc6749#section-5.2
+      validate :redirect_uri, error: :invalid_grant
 
       attr_accessor :server, :grant, :client, :redirect_uri, :access_token
 
@@ -31,6 +29,7 @@ module Doorkeeper
                                       grant.scopes,
                                       server)
         end
+        super
       end
 
       def validate_attributes
@@ -47,7 +46,10 @@ module Doorkeeper
       end
 
       def validate_redirect_uri
-        grant.redirect_uri == redirect_uri
+        Helpers::URIChecker.valid_for_authorization?(
+          redirect_uri,
+          grant.redirect_uri
+        )
       end
     end
   end

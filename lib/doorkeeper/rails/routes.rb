@@ -3,9 +3,8 @@ require 'doorkeeper/rails/routes/mapper'
 
 module Doorkeeper
   module Rails
-    class Routes
+    class Routes # :nodoc:
       module Helper
-        # TODO: options hash is not being used
         def use_doorkeeper(options = {}, &block)
           Doorkeeper::Rails::Routes.new(self, &block).generate_routes!(options)
         end
@@ -15,18 +14,19 @@ module Doorkeeper
         ActionDispatch::Routing::Mapper.send :include, Doorkeeper::Rails::Routes::Helper
       end
 
-      attr_accessor :routes
+      attr_reader :routes
 
       def initialize(routes, &block)
-        @routes, @block = routes, block
+        @routes = routes
+        @mapping = Mapper.new.map(&block)
       end
 
       def generate_routes!(options)
-        @mapping = Mapper.new.map(&@block)
         routes.scope options[:scope] || 'oauth', as: 'oauth' do
           map_route(:authorizations, :authorization_routes)
           map_route(:tokens, :token_routes)
           map_route(:tokens, :revoke_routes)
+          map_route(:tokens, :introspect_routes)
           map_route(:applications, :application_routes)
           map_route(:authorized_applications, :authorized_applications_routes)
           map_route(:token_info, :token_info_routes)
@@ -36,20 +36,18 @@ module Doorkeeper
       private
 
       def map_route(name, method)
-        unless @mapping.skipped?(name)
-          send method, @mapping[name]
-        end
+        send(method, @mapping[name]) unless @mapping.skipped?(name)
       end
 
       def authorization_routes(mapping)
         routes.resource(
           :authorization,
           path: 'authorize',
-          only: [:create, :destroy],
+          only: %i[create destroy],
           as: mapping[:as],
           controller: mapping[:controllers]
         ) do
-          routes.get '/:code', action: :show, on: :member
+          routes.get '/native', action: :show, on: :member
           routes.get '/', action: :new, on: :member
         end
       end
@@ -67,6 +65,10 @@ module Doorkeeper
         routes.post 'revoke', controller: mapping[:controllers], action: :revoke
       end
 
+      def introspect_routes(mapping)
+        routes.post 'introspect', controller: mapping[:controllers], action: :introspect
+      end
+
       def token_info_routes(mapping)
         routes.resource(
           :token_info,
@@ -81,7 +83,7 @@ module Doorkeeper
       end
 
       def authorized_applications_routes(mapping)
-        routes.resources :authorized_applications, only: [:index, :destroy], controller: mapping[:controllers]
+        routes.resources :authorized_applications, only: %i[index destroy], controller: mapping[:controllers]
       end
     end
   end

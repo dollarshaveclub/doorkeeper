@@ -1,21 +1,17 @@
 module Doorkeeper
   module Rails
     module Helpers
-      extend ActiveSupport::Concern
-
       def doorkeeper_authorize!(*scopes)
         @_doorkeeper_scopes = scopes.presence || Doorkeeper.configuration.default_scopes
 
-        if !valid_doorkeeper_token?
+        unless valid_doorkeeper_token?
           doorkeeper_render_error
         end
       end
 
-      def doorkeeper_unauthorized_render_options(error: nil)
-      end
+      def doorkeeper_unauthorized_render_options(**); end
 
-      def doorkeeper_forbidden_render_options(error: nil)
-      end
+      def doorkeeper_forbidden_render_options(**); end
 
       def valid_doorkeeper_token?
         doorkeeper_token && doorkeeper_token.acceptable?(@_doorkeeper_scopes)
@@ -25,14 +21,15 @@ module Doorkeeper
 
       def doorkeeper_render_error
         error = doorkeeper_error
-        headers.merge! error.headers.reject { |k| "Content-Type" == k }
+        headers.merge!(error.headers.reject { |k| k == "Content-Type" })
         doorkeeper_render_error_with(error)
       end
 
       def doorkeeper_render_error_with(error)
         options = doorkeeper_render_options(error) || {}
         status = doorkeeper_status_for_error(
-          error, options.delete(:respond_not_found_when_forbidden))
+          error, options.delete(:respond_not_found_when_forbidden)
+        )
         if options.blank?
           head status
         else

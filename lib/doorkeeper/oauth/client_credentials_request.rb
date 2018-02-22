@@ -4,14 +4,12 @@ require 'doorkeeper/oauth/client_credentials/validation'
 
 module Doorkeeper
   module OAuth
-    class ClientCredentialsRequest
-      include Validations
-      include OAuth::RequestConcern
-
-      attr_writer :issuer
+    class ClientCredentialsRequest < BaseRequest
       attr_accessor :server, :client, :original_scopes
       attr_reader :response
-      alias :error_response :response
+      attr_writer :issuer
+
+      alias_method :error_response, :response
 
       delegate :error, to: :issuer
 
@@ -20,8 +18,9 @@ module Doorkeeper
       end
 
       def initialize(server, client, parameters = {})
-        @client, @server = client, server
-        @response        = nil
+        @client = client
+        @server = server
+        @response = nil
         @original_scopes = parameters[:scope]
       end
 
